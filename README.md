@@ -31,7 +31,7 @@ Connect the SDS011 sensor to your ESP8266/NodeMCU board as follows.
 * SDS011 TXD → NodeMCU D1 (ESP8266 GPIO5)
 * SDS011 RXD → NodeMCU D2 (ESP8266 GPIO4)
 
-If you use use different pins for TXD and RXD, you need to adjust the
+If you use different pins for TXD and RXD, you need to adjust the
 softuart.setup call in the examples provided in this repository to reflect
 those changes. Keep in mind that some ESP8266 pins must have well-defined logic
 levels at boot time and may therefore be unsuitable for SDS011 connection.
