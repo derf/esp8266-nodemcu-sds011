@@ -45,7 +45,7 @@ sds011 = require("sds011")
 port = softuart.setup(9600, 2, 1)
 port:on("data", 10, uart_callback)
 
-function uart_callback(data
+function uart_callback(data)
 	local pm25i, pm25d, pm10i, pm10d = sds011.parse_frame(data)
 	if pm25i ~= nil then
 		-- pm25i/pm10i contain the integer part (i.e., PM2.5 / PM10 value in µg/m³)
