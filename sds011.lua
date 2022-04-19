@@ -18,6 +18,8 @@ local c_sleep = 0x00
 local c_work = 0x01
 local c_workperiod = 0x08
 
+sds011.work_period = 0
+
 function sds011.finish_cmd(cmd)
 	cmd = cmd .. string.char(0xff, 0xff)
 	local checksum = 0
@@ -56,6 +58,7 @@ function sds011.set_work_period(period)
 	if period < 0 or period > 30 then
 		return
 	end
+	sds011.work_period = period
 	local cmd = string.char(c_head, c_id, c_workperiod, c_write, period)
 	cmd = cmd .. string.char(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 	return sds011.finish_cmd(cmd)
