@@ -22,6 +22,7 @@ function log_restart()
 end
 
 function setup_client()
+	print("Connected")
 	gpio.write(ledpin, 1)
 	publishing = true
 	mqttclient:publish(mqtt_prefix .. "/state", "online", 0, 1, function(client)
@@ -89,10 +90,10 @@ end
 function hass_register()
 	local hass_device = string.format('{"connections":[["mac","%s"]],"identifiers":["%s"],"model":"ESP8266","name":"ESP8266 SDS011","manufacturer":"DIY"}', wifi.sta.getmac(), device_id)
 	local hass_entity_base = string.format('"device":%s,"state_topic":"%s/data","expire_after":1800', hass_device, mqtt_prefix)
-	local hass_pm2_5 = string.format('{%s,"name":"PM2.5","unique_id":"%s_pm2_5","icon":"mdi:air-filter","unit_of_measurement":"µg/m³","value_template":"{{value_json.pm2_5_ugm3}}"}', hass_entity_base, device_id)
-	local hass_pm10 = string.format('{%s,"name":"PM10","unique_id":"%s_pm10","icon":"mdi:air-filter","unit_of_measurement":"µg/m³","value_template":"{{value_json.pm10_ugm3}}"}', hass_entity_base, device_id)
-	local hass_rssi = string.format('{%s,"name":"RSSI","unique_id":"%s_rssi","icon":"mdi:wifi","unit_of_measurement":"dBm","value_template":"{{value_json.rssi_dbm}}","entity_category":"diagnostic"}', hass_entity_base, device_id)
-	local hass_period = string.format('{%s,"name":"Measurement Period","unique_id":"%s_period","icon":"mdi:clock-outline","command_topic":"config/%s/set/work_period","options":["continuous","1 min","2 min","3 min","4 min","5 min","6 min","7 min","8 min","9 min","10 min"],"value_template":"{{value_json.period}}","entity_category":"config"}', hass_entity_base, device_id, device_id)
+	local hass_pm2_5 = string.format('{%s,"name":"PM2.5","object_id":"%s_pm2_5","unique_id":"%s_pm2_5","device_class":"pm25","unit_of_measurement":"µg/m³","value_template":"{{value_json.pm2_5_ugm3}}"}', hass_entity_base, device_id, device_id)
+	local hass_pm10 = string.format('{%s,"name":"PM10","object_id":"%s_pm10","unique_id":"%s_pm10","device_class":"pm10","unit_of_measurement":"µg/m³","value_template":"{{value_json.pm10_ugm3}}"}', hass_entity_base, device_id, device_id)
+	local hass_rssi = string.format('{%s,"name":"RSSI","object_id":"%s_rssi","unique_id":"%s_rssi","device_class":"signal_strength","unit_of_measurement":"dBm","value_template":"{{value_json.rssi_dbm}}","entity_category":"diagnostic"}', hass_entity_base, device_id, device_id)
+	local hass_period = string.format('{%s,"name":"Measurement Period","object_id":"%s_period","unique_id":"%s_period","icon":"mdi:clock-outline","command_topic":"config/%s/set/work_period","options":["continuous","1 min","2 min","3 min","4 min","5 min","6 min","7 min","8 min","9 min","10 min"],"value_template":"{{value_json.period}}","entity_category":"config"}', hass_entity_base, device_id, device_id, device_id)
 
 	mqttclient:publish("homeassistant/sensor/" .. device_id .. "/pm2_5/config", hass_pm2_5, 0, 1, function(client)
 		mqttclient:publish("homeassistant/sensor/" .. device_id .. "/pm10/config", hass_pm10, 0, 1, function(client)
