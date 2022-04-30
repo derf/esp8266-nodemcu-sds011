@@ -86,7 +86,7 @@ function hass_config(client, topic, message)
 end
 
 function hass_register()
-	local hass_device = string.format('{"connections":[["mac","%s"]],"identifiers":["%s"],"model":"ESP8266","name":"ESP8266 SDS011","manufacturer":"DIY"}', wifi.sta.getmac(), device_id)
+	local hass_device = string.format('{"connections":[["mac","%s"]],"identifiers":["%s"],"model":"ESP8266 + SDS011","name":"SDS011 %s","manufacturer":"derf"}', wifi.sta.getmac(), device_id, chip_id)
 	local hass_entity_base = string.format('"device":%s,"state_topic":"%s/data","expire_after":1800', hass_device, mqtt_prefix)
 	local hass_pm2_5 = string.format('{%s,"name":"PM2.5","object_id":"%s_pm2_5","unique_id":"%s_pm2_5","device_class":"pm25","unit_of_measurement":"µg/m³","value_template":"{{value_json.pm2_5_ugm3}}"}', hass_entity_base, device_id, device_id)
 	local hass_pm10 = string.format('{%s,"name":"PM10","object_id":"%s_pm10","unique_id":"%s_pm10","device_class":"pm10","unit_of_measurement":"µg/m³","value_template":"{{value_json.pm10_ugm3}}"}', hass_entity_base, device_id, device_id)
