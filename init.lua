@@ -34,7 +34,6 @@ end
 function connect_mqtt()
 	print("IP address: " .. wifi.sta.getip())
 	print("Connecting to MQTT " .. mqtt_host)
-	delayed_restart:stop()
 	mqttclient:on("connect", hass_register)
 	mqttclient:on("message", hass_config)
 	mqttclient:on("offline", log_restart)
@@ -94,6 +93,8 @@ function hass_register()
 	local hass_rssi = string.format('{%s,"name":"RSSI","object_id":"%s_rssi","unique_id":"%s_rssi","device_class":"signal_strength","unit_of_measurement":"dBm","value_template":"{{value_json.rssi_dbm}}","entity_category":"diagnostic"}', hass_entity_base, device_id, device_id)
 	local hass_period = string.format('{%s,"name":"Measurement Period","object_id":"%s_period","unique_id":"%s_period","icon":"mdi:clock-outline","command_topic":"config/%s/set/work_period","options":["continuous","1 min","2 min","3 min","4 min","5 min","6 min","7 min","8 min","9 min","10 min"],"value_template":"{{value_json.period}}","entity_category":"config"}', hass_entity_base, device_id, device_id, device_id)
 
+	delayed_restart:stop()
+
 	mqttclient:publish("homeassistant/sensor/" .. device_id .. "/pm2_5/config", hass_pm2_5, 0, 1, function(client)
 		mqttclient:publish("homeassistant/sensor/" .. device_id .. "/pm10/config", hass_pm10, 0, 1, function(client)
 			mqttclient:publish("homeassistant/sensor/" .. device_id .. "/rssi/config", hass_rssi, 0, 1, function(client)
@@ -108,6 +109,7 @@ function hass_register()
 	end)
 end
 
-delayed_restart:register(20 * 1000, tmr.ALARM_SINGLE, node.restart)
+delayed_restart:register(30 * 1000, tmr.ALARM_SINGLE, node.restart)
+delayed_restart:start()
 
 connect_wifi()
