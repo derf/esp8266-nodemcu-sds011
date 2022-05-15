@@ -56,14 +56,6 @@ function uart_callback(data)
 end
 ```
 
-See **init.lua** for an example. To use it, you need to create a **config.lua** file with WiFI and MQTT settings:
-
-```lua
-station_cfg.ssid = "..."
-station_cfg.pwd = "..."
-mqtt_host = "..."
-```
-
 ## SDS011 Configuration API
 
 If desired, **sds011.lua** can be used to configure the SDS011 sensor.
@@ -78,3 +70,24 @@ Currently, the following commands are supported
 * `port:write(sds011.set_work_period(period))`
   * period == 0: continuous operation (about one measurement per second)
   * 0 < *period* ≤ 30: about one measurement every *period* minutes; fan turned off in-between
+
+## Application Example
+
+**init.lua** is an example application with HomeAssistant integration.
+To use it, you need to create a **config.lua** file with WiFI and MQTT settings:
+
+```lua
+station_cfg.ssid = "..."
+station_cfg.pwd = "..."
+mqtt_host = "..."
+```
+
+Optionally, it can also publish readings to an InfluxDB.
+To do so, configure URL and attribute:
+
+```lua
+influx_url = "..."
+influx_attr = "..."
+```
+
+Readings will be stored as `sds011,[influx_attr] pm2_5_ugm3=...,pm10_ugm3=...`
