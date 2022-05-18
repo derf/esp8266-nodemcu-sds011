@@ -55,23 +55,38 @@ end
 function sds011.set_work_period(period)
 	-- period == 0 : continuous operation, about one measurement per second
 	-- period > 0  : about one measurement every <period> minutes, fan is turned off in-between
-	if period < 0 or period > 30 then
+	if period ~= nil and (period < 0 or period > 30) then
 		return
 	end
-	sds011.work_period = period
-	local cmd = string.char(c_head, c_id, c_workperiod, c_write, period)
+	local op = c_write
+	if period == nil then
+		op = c_read
+		period = 0
+	end
+	local cmd = string.char(c_head, c_id, c_workperiod, op, period)
 	cmd = cmd .. string.char(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 	return sds011.finish_cmd(cmd)
 end
 
 function sds011.parse_frame(data)
 	local header, command, pm25l, pm25h, pm10l, pm10h, id1, id2, sum, tail = struct.unpack("BBBBBBBBBB", data)
-	if header ~= c_head or command ~= 0xc0 or (pm25l + pm25h + pm10l + pm10h + id1 + id2) % 256 ~= sum or tail ~= c_tail then
-		return nil
+	if header ~= c_head or (pm25l + pm25h + pm10l + pm10h + id1 + id2) % 256 ~= sum or tail ~= c_tail then
+		return false
 	end
-	pm25 = pm25h * 256 + pm25l
-	pm10 = pm10h * 256 + pm10l
-	return pm25 / 10, pm25 % 10, pm10 / 10, pm10 % 10
+	if command == 0xc0 then
+		local pm25 = pm25h * 256 + pm25l
+		local pm10 = pm10h * 256 + pm10l
+		sds011.pm2_5i = pm25 / 10
+		sds011.pm2_5f = pm25 % 10
+		sds011.pm10i = pm10 / 10
+		sds011.pm10f = pm10 % 10
+		return true
+	end
+	if command == 0xc5 then
+		sds011.work_period = pm10l
+		return true
+	end
+	return false
 end
 
 return sds011

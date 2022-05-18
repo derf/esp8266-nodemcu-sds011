@@ -25,12 +25,13 @@ end
 function setup_client()
 	print("Connected")
 	gpio.write(ledpin, 1)
+	port = softuart.setup(9600, 2, 1)
+	port:on("data", 10, uart_callback)
 	publishing_mqtt = true
 	mqttclient:publish(mqtt_prefix .. "/state", "online", 0, 1, function(client)
 		publishing_mqtt = false
+		port:write(sds011.set_work_period(nil))
 	end)
-	port = softuart.setup(9600, 2, 1)
-	port:on("data", 10, uart_callback)
 end
 
 function connect_mqtt()
@@ -55,8 +56,7 @@ function connect_wifi()
 end
 
 function uart_callback(data)
-	local pm25i, pm25f, pm10i, pm10f = sds011.parse_frame(data)
-	if pm25i == nil then
+	if not sds011.parse_frame(data) then
 		print("Invalid or data-less SDS011 frame")
 		return
 	end
@@ -64,8 +64,14 @@ function uart_callback(data)
 	if sds011.work_period > 0 then
 		work_period = string.format("%d min", sds011.work_period)
 	end
-	local json_str = string.format('{"pm2_5_ugm3": %d.%d, "pm10_ugm3": %d.%d, "rssi_dbm": %d, "period": "%s"}', pm25i, pm25f, pm10i, pm10f, wifi.sta.getrssi(), work_period)
-	local influx_str = string.format("pm2_5_ugm3=%d.%d,pm10_ugm3=%d.%d", pm25i, pm25f, pm10i, pm10f)
+
+	local json_str = string.format('{"rssi_dbm":%d,"period":"%s"', wifi.sta.getrssi(), work_period)
+	if sds011.pm2_5i ~= nil then
+		json_str = string.format('%s,"pm2_5_ugm3":%d.%d,"pm10_ugm3":%d.%d', json_str, sds011.pm2_5i, sds011.pm2_5f, sds011.pm10i, sds011.pm10f)
+		local influx_str = string.format("pm2_5_ugm3=%d.%d,pm10_ugm3=%d.%d", sds011.pm2_5i, sds011.pm2_5f, sds011.pm10i, sds011.pm10f)
+	end
+	json_str = json_str .. '}'
+
 	if not publishing_mqtt then
 		watchdog:start(true)
 		publishing_mqtt = true

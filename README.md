@@ -46,12 +46,14 @@ port = softuart.setup(9600, 2, 1)
 port:on("data", 10, uart_callback)
 
 function uart_callback(data)
-	local pm25i, pm25d, pm10i, pm10d = sds011.parse_frame(data)
-	if pm25i ~= nil then
-		-- pm25i/pm10i contain the integer part (i.e., PM2.5 / PM10 value in µg/m³)
-		-- pm25d/pm10d contain the decimal/fractional part (i.e., PM2.5 / PM10 fraction in .1 µg/m³, range 0 .. 9)
-	else
-		-- invalid checksum or non-data frame (i.e., acknowledgment of a write command)
+	if sds011.parse_frame(data) then
+		-- PM values or work period have been updated
+		if sds011.pm2_5i ~= nil then
+			-- pm2_5i/pm10i contain the integer part (i.e., PM2.5 / PM10 value in µg/m³)
+			-- pm2_5d/pm10d contain the decimal/fractional part (i.e., PM2.5 / PM10 fraction in .1 µg/m³, range 0 .. 9)
+		else
+			-- sds011.work_period has been updated after using sds011.set_work_period
+		end
 	end
 end
 ```
@@ -68,6 +70,7 @@ Currently, the following commands are supported
   * sleep == true: put sensor into sleep mode. The fan is turned off, no further measurements are performed
   * sleep == false: wake up sensor.
 * `port:write(sds011.set_work_period(period))`
+  * period == nil: request current work period; does not change it
   * period == 0: continuous operation (about one measurement per second)
   * 0 < *period* ≤ 30: about one measurement every *period* minutes; fan turned off in-between
 
