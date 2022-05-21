@@ -18,6 +18,9 @@ gpio.write(ledpin, 0)
 
 sds011 = require("sds011")
 
+poll = tmr.create()
+polling = false
+
 function log_restart()
 	print("Network error " .. wifi.sta.status())
 end
@@ -65,6 +68,17 @@ function uart_callback(data)
 		work_period = string.format("%d min", sds011.work_period)
 	end
 
+	if sds011.work_period == 0 and not polling then
+		polling = true
+		port:write(sds011.set_report_mode(false))
+		poll:start()
+	end
+	if sds011.work_period > 0 and polling then
+		polling = false
+		port:write(sds011.set_report_mode(true))
+		poll:stop()
+	end
+
 	local json_str = string.format('{"rssi_dbm":%d,"period":"%s"', wifi.sta.getrssi(), work_period)
 	if sds011.pm2_5i ~= nil then
 		json_str = string.format('%s,"pm2_5_ugm3":%d.%d,"pm10_ugm3":%d.%d', json_str, sds011.pm2_5i, sds011.pm2_5f, sds011.pm10i, sds011.pm10f)
@@ -97,6 +111,10 @@ function publish_influx(payload)
 			collectgarbage()
 		end)
 	end
+end
+
+function query_data()
+	port:write(sds011.query())
 end
 
 function hass_config(client, topic, message)
@@ -133,6 +151,7 @@ function hass_register()
 end
 
 watchdog:register(20 * 60 * 1000, tmr.ALARM_SEMI, node.restart)
+poll:register(10 * 1000, tmr.ALARM_AUTO, query_data)
 watchdog:start()
 
 connect_wifi()

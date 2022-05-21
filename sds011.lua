@@ -30,13 +30,22 @@ function sds011.finish_cmd(cmd)
 	return cmd
 end
 
+function sds011.query()
+	local cmd = string.char(c_head, c_id, c_query)
+	cmd = cmd .. string.char(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+	return sds011.finish_cmd(cmd)
+end
+
 function sds011.set_report_mode(active)
-	local cmd = string.char(c_head, c_id, c_report_mode, c_write)
-	if active then
-		cmd = cmd .. string.char(c_active)
-	else
-		cmd = cmd .. string.char(c_passive)
+	local op = c_write
+	local cmd = c_passive
+	if active == nil then
+		op = c_read
+		active = false
+	elseif active then
+		cmd = c_active
 	end
+	local cmd = string.char(c_head, c_id, c_report_mode, op, cmd)
 	cmd = cmd .. string.char(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 	return sds011.finish_cmd(cmd)
 end
@@ -82,7 +91,7 @@ function sds011.parse_frame(data)
 		sds011.pm10f = pm10 % 10
 		return true
 	end
-	if command == 0xc5 then
+	if command == 0xc5 and pm25l == 0x08 then
 		sds011.work_period = pm10l
 		return true
 	end
