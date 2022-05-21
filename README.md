@@ -64,13 +64,17 @@ If desired, **sds011.lua** can be used to configure the SDS011 sensor.
 Currently, the following commands are supported
 
 * `port:write(sds011.set_report_mode(active))`
+  * active == nil: request current mode; do not change it.
+    The mode can be read from `sds011.active_mode` after a few milliseconds.
   * active == true: periodically report PM2.5 and PM10 values via UART
   * active == false: only report PM2.5 and PM10 values when queried
 * `port:write(sds011.sleep(sleep))`
-  * sleep == true: put sensor into sleep mode. The fan is turned off, no further measurements are performed
-  * sleep == false: wake up sensor.
+  * sleep == true: put sensor into sleep mode.
+    The fan is turned off, no further measurements are performed.
+  * sleep == false: wake up sensor
 * `port:write(sds011.set_work_period(period))`
-  * period == nil: request current work period; does not change it
+  * period == nil: request current work period; do not change it.
+    The work period can be read from `sds011.work_period` after a few milliseconds.
   * period == 0: continuous operation (about one measurement per second)
   * 0 < *period* ≤ 30: about one measurement every *period* minutes; fan turned off in-between
 

@@ -18,7 +18,8 @@ local c_sleep = 0x00
 local c_work = 0x01
 local c_workperiod = 0x08
 
-sds011.work_period = 0
+sds011.work_period = nil
+sds011.active_mode = nil
 
 function sds011.finish_cmd(cmd)
 	cmd = cmd .. string.char(0xff, 0xff)
@@ -90,8 +91,10 @@ function sds011.parse_frame(data)
 		sds011.pm10i = pm10 / 10
 		sds011.pm10f = pm10 % 10
 		return true
-	end
-	if command == 0xc5 and pm25l == 0x08 then
+	elseif command == 0xc5 and pm25l == 0x02 then
+		sds011.active_mode = pm10l == 0
+		return true
+	elseif command == 0xc5 and pm25l == 0x08 then
 		sds011.work_period = pm10l
 		return true
 	end
