@@ -18,8 +18,9 @@ local c_sleep = 0x00
 local c_work = 0x01
 local c_workperiod = 0x08
 
-sds011.work_period = nil
 sds011.active_mode = nil
+sds011.work_period = nil
+sds011.working = nil
 
 function sds011.finish_cmd(cmd)
 	cmd = cmd .. string.char(0xff, 0xff)
@@ -46,18 +47,22 @@ function sds011.set_report_mode(active)
 	elseif active then
 		cmd = c_active
 	end
-	local cmd = string.char(c_head, c_id, c_report_mode, op, cmd)
+	cmd = string.char(c_head, c_id, c_report_mode, op, cmd)
 	cmd = cmd .. string.char(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 	return sds011.finish_cmd(cmd)
 end
 
-function sds011.sleep(sleep)
-	local cmd = string.char(c_head, c_id, c_sleepcmd, c_write)
-	if sleep then
-		cmd = cmd .. string.char(c_sleep)
-	else
-		cmd = cmd .. string.char(c_work)
+function sds011.set_sleep(sleep)
+	local op = c_write
+	local cmd = c_work
+	if sleep == nil then
+		-- if the device is sleeping, it will not respond to a query
+		sds011.working = false
+		op = c_read
+	elseif sleep then
+		cmd = c_sleep
 	end
+	cmd = string.char(c_head, c_id, c_sleepcmd, op, cmd)
 	cmd = cmd .. string.char(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 	return sds011.finish_cmd(cmd)
 end
@@ -93,6 +98,13 @@ function sds011.parse_frame(data)
 		return true
 	elseif command == 0xc5 and pm25l == 0x02 then
 		sds011.active_mode = pm10l == 0
+		return true
+	elseif command == 0xc5 and pm25l == 0x06 then
+		if pm25h == 0 or pm10l == 1 then
+			sds011.working = true
+		else
+			sds011.working = false
+		end
 		return true
 	elseif command == 0xc5 and pm25l == 0x08 then
 		sds011.work_period = pm10l

@@ -47,36 +47,58 @@ port:on("data", 10, uart_callback)
 
 function uart_callback(data)
 	if sds011.parse_frame(data) then
-		-- PM values or work period have been updated
 		if sds011.pm2_5i ~= nil then
 			-- pm2_5i/pm10i contain the integer part (i.e., PM2.5 / PM10 value in µg/m³)
-			-- pm2_5d/pm10d contain the decimal/fractional part (i.e., PM2.5 / PM10 fraction in .1 µg/m³, range 0 .. 9)
-		else
-			-- sds011.work_period has been updated after using sds011.set_work_period
+			-- pm2_5f/pm10f contain the decimal/fractional part (i.e., PM2.5 / PM10 fraction in .1 µg/m³, range 0 .. 9)
 		end
 	end
 end
 ```
 
-## SDS011 Configuration API
+## SDS011 API
 
 If desired, **sds011.lua** can be used to configure the SDS011 sensor.
-Currently, the following commands are supported
+
+### Commands
 
 * `port:write(sds011.set_report_mode(active))`
   * active == nil: request current mode; do not change it.
     The mode can be read from `sds011.active_mode` after a few milliseconds.
   * active == true: periodically report PM2.5 and PM10 values via UART
   * active == false: only report PM2.5 and PM10 values when queried
-* `port:write(sds011.sleep(sleep))`
-  * sleep == true: put sensor into sleep mode.
-    The fan is turned off, no further measurements are performed.
-  * sleep == false: wake up sensor
 * `port:write(sds011.set_work_period(period))`
   * period == nil: request current work period; do not change it.
     The work period can be read from `sds011.work_period` after a few milliseconds.
   * period == 0: continuous operation (about one measurement per second)
   * 0 < *period* ≤ 30: about one measurement every *period* minutes; fan turned off in-between
+* `port:write(sds011.sleep(sleep))`
+  * sleep == nil: query current sleep mode; do not change it.
+    The mode can be read from `sds011.working` after a few milliseconds; do
+    not trust its value before that.
+    Background: SDS011 sensors only respond to a sleep mode query when they are
+    not in sleep mode. To handle this, the driver sets `sds011.working = false`
+    when running the query, and reverts it to `sds011.working = true` only if
+    it receives an appropriate response.
+  * sleep == true: put sensor into sleep mode.
+    The fan is turned off, no further measurements are performed. In this mode,
+    `port:write(sds011.sleep(false))` is the only command accepted by the
+    device.
+  * sleep == false: wake up sensor
+* `port:write(sds011.query())`: Query PM2.5 and PM10 values in passive mode.
+  data is available after a few milliseconds.
+
+### Variables
+
+* `sds011.active_mode`
+  * true: the sensor automatically reports readings
+  * false: the sensor only reports readings when queried
+* `sds011.work_period`
+  * 0: perform one reading measurement every second
+  * otherwise: number of minutes between measurements
+* `sds011.working`
+  * true: the sensor is enabled
+  * false: the sensor is in sleep mode
+* `sds011.pm2_5i`, `sds011.pm2_5f`, `sds011.pm10i`, `sds011.pm10f`: see Usage
 
 ## Application Example
 
