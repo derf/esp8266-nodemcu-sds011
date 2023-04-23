@@ -1,8 +1,8 @@
-# ESP8266 Lua/NodeMCU module for SDS011 particle monitor
+# ESP8266 Lua/NodeMCU module for SDS011 PM sensors
 
-This repository contains a Lua module (`sds011.lua`) as well as ESP8266/NodeMCU
-MQTT gateway application example (`init.lua`) for the **SDS011** particulate
-matter (PM2.5 and PM10) sensor.
+This repository contains an ESP8266 NodeMCU Lua module (`sds011.lua`) as well
+MQTT / HomeAssistant / InfluxDB integration example (`init.lua`) for **SDS011**
+particulate matter (PM2.5 and PM10) sensors.
 
 ## Dependencies
 
