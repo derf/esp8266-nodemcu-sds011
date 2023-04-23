@@ -80,9 +80,10 @@ function uart_callback(data)
 	end
 
 	local json_str = string.format('{"rssi_dbm":%d,"period":"%s"', wifi.sta.getrssi(), work_period)
+	local influx_str = ""
 	if sds011.pm2_5i ~= nil then
 		json_str = string.format('%s,"pm2_5_ugm3":%d.%d,"pm10_ugm3":%d.%d', json_str, sds011.pm2_5i, sds011.pm2_5f, sds011.pm10i, sds011.pm10f)
-		local influx_str = string.format("pm2_5_ugm3=%d.%d,pm10_ugm3=%d.%d", sds011.pm2_5i, sds011.pm2_5f, sds011.pm10i, sds011.pm10f)
+		influx_str = string.format("pm2_5_ugm3=%d.%d,pm10_ugm3=%d.%d", sds011.pm2_5i, sds011.pm2_5f, sds011.pm10i, sds011.pm10f)
 	end
 	json_str = json_str .. '}'
 
