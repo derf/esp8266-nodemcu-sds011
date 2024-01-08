@@ -111,7 +111,7 @@ station_cfg.pwd = "..."
 mqtt_host = "..."
 ```
 
-Optionally, it can also publish readings to an InfluxDB.
+Optionally, it can also publish readings to InfluxDB.
 To do so, configure URL and attribute:
 
 ```lua
@@ -119,4 +119,5 @@ influx_url = "..."
 influx_attr = "..."
 ```
 
-Readings will be stored as `sds011,[influx_attr] pm2_5_ugm3=...,pm10_ugm3=...`
+Readings will be published as `sds011[influx_attr] pm2_5_ugm3=...,pm10_ugm3=...`
+So, unless `influx_attr = ''`, it must start with a comma, e.g. `influx_attr = ',device=' .. device_id`.
