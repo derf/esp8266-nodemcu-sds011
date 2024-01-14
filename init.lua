@@ -1,4 +1,3 @@
-station_cfg = {}
 publishing_mqtt = false
 publishing_http = false
 
@@ -10,7 +9,7 @@ mqttclient = mqtt.Client(device_id, 120)
 
 dofile("config.lua")
 
-print("ESP8266 " .. chip_id)
+print("SDS011 " .. chip_id)
 
 ledpin = 4
 gpio.mode(ledpin, gpio.OUTPUT)
