@@ -1,7 +1,8 @@
 # ESP8266 Lua/NodeMCU module for Nova SDS011 PM sensors
 
-This repository contains an ESP8266 NodeMCU Lua module (`sds011.lua`) as well
-MQTT / HomeAssistant / InfluxDB integration example (`init.lua`) for **SDS011**
+[esp8266-nodemcu-sds011](https://finalrewind.org/projects/esp8266-nodemcu-sds011/)
+provides an ESP8266 NodeMCU Lua module (`sds011.lua`) as well MQTT /
+HomeAssistant / InfluxDB integration example (`init.lua`) for **SDS011**
 particulate matter (PM2.5 and PM10) sensors connected via UART.
 
 ## Dependencies
