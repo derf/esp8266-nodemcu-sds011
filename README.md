@@ -16,7 +16,8 @@ Most practical applications (such as the example in init.lua) also need the
 following modules.
 
 * gpio
-* mqtt
+* http (for InfluxDB integration)
+* mqtt (for HomeAssistant / MQTT integration)
 * node
 * softuart
 * tmr
@@ -102,23 +103,18 @@ If desired, **sds011.lua** can be used to configure the SDS011 sensor.
 
 ## Application Example
 
-**init.lua** is an example application with HomeAssistant integration.
-To use it, you need to create a **config.lua** file with WiFI and MQTT settings:
+**init.lua** is an example application with optional HomeAssistant and InfluxDB integration.
+To use it, you need to create a **config.lua** file with WiFI and MQTT/InfluxDB settings:
 
 ```lua
 station_cfg = {ssid = "...", pwd = "..."}
 mqtt_host = "..."
-```
-
-Optionally, it can also publish readings to InfluxDB.
-To do so, configure URL and attribute:
-
-```lua
 influx_url = "..."
 influx_attr = "..."
 ```
 
-Readings will be published as `sds011[influx_attr] pm2_5_ugm3=%d.%01d,pm10_ugm3=%d.%01d`.
+Both `mqtt_host` and `influx_url` are optional, though it does not make much sense to specify neither.
+InfluxDB readings will be published as `sds011[influx_attr] pm2_5_ugm3=%d.%01d,pm10_ugm3=%d.%01d`.
 So, unless `influx_attr = ''`, it must start with a comma, e.g. `influx_attr = ',device=' .. device_id`.
 
 ## Images

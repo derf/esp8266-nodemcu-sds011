@@ -4,10 +4,13 @@ publishing_http = false
 watchdog = tmr.create()
 chip_id = string.format("%06X", node.chipid())
 device_id = "esp8266_" .. chip_id
-mqtt_prefix = "sensor/" .. device_id
-mqttclient = mqtt.Client(device_id, 120)
 
 dofile("config.lua")
+
+if mqtt_host then
+	mqtt_prefix = "sensor/" .. device_id
+	mqttclient = mqtt.Client(device_id, 120)
+end
 
 print("SDS011 " .. chip_id)
 
@@ -29,11 +32,15 @@ function setup_client()
 	gpio.write(ledpin, 1)
 	port = softuart.setup(9600, 2, 1)
 	port:on("data", 10, uart_callback)
-	publishing_mqtt = true
-	mqttclient:publish(mqtt_prefix .. "/state", "online", 0, 1, function(client)
-		publishing_mqtt = false
-		port:write(sds011.set_work_period(nil))
-	end)
+	if mqtt_host then
+		publishing_mqtt = true
+		mqttclient:publish(mqtt_prefix .. "/state", "online", 0, 1, function(client)
+			publishing_mqtt = false
+			port:write(sds011.set_work_period(nil))
+		end)
+	else
+		port:write(sds011.set_work_period(0))
+	end
 end
 
 function connect_mqtt()
@@ -49,7 +56,11 @@ end
 function connect_wifi()
 	print("WiFi MAC: " .. wifi.sta.getmac())
 	print("Connecting to ESSID " .. station_cfg.ssid)
-	wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, connect_mqtt)
+	if mqtt_host then
+		wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, connect_mqtt)
+	else
+		wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, setup_client)
+	end
 	wifi.eventmon.register(wifi.eventmon.STA_DHCP_TIMEOUT, log_restart)
 	wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, log_restart)
 	wifi.setmode(wifi.STATION)
@@ -66,6 +77,8 @@ function uart_callback(data)
 	if sds011.work_period > 0 then
 		work_period = string.format("%d min", sds011.work_period)
 	end
+
+	gpio.write(ledpin, 0)
 
 	if sds011.work_period == 0 and not polling then
 		polling = true
@@ -86,11 +99,11 @@ function uart_callback(data)
 	end
 	json_str = json_str .. '}'
 
-	if not publishing_mqtt then
-		watchdog:start(true)
-		publishing_mqtt = true
-		gpio.write(ledpin, 0)
-		mqttclient:publish(mqtt_prefix .. "/data", json_str, 0, 0, function(client)
+	if mqtt_host then
+		if not publishing_mqtt then
+			watchdog:start(true)
+			publishing_mqtt = true
+			mqttclient:publish(mqtt_prefix .. "/data", json_str, 0, 0, function(client)
 			publishing_mqtt = false
 			if influx_url and influx_attr and influx_str then
 				publish_influx(influx_str)
@@ -98,7 +111,10 @@ function uart_callback(data)
 				gpio.write(ledpin, 1)
 				collectgarbage()
 			end
-		end)
+			end)
+		end
+	elseif influx_url and influx_attr and influx_str then
+		publish_influx(influx_str)
 	end
 end
 
@@ -106,6 +122,7 @@ function publish_influx(payload)
 	if not publishing_http then
 		publishing_http = true
 		http.post(influx_url, influx_header, "sds011" .. influx_attr .. " " .. payload, function(code, data)
+			print("POST " .. influx_url .. " sds011" .. influx_attr .. " " .. payload .. " returned " .. code)
 			publishing_http = false
 			gpio.write(ledpin, 1)
 			collectgarbage()
