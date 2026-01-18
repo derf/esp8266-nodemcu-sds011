@@ -120,3 +120,11 @@ So, unless `influx_attr = ''`, it must start with a comma, e.g. `influx_attr = '
 ## Images
 
 ![](https://finalrewind.org/projects/esp8266-nodemcu-sds011/media/preview.png)
+
+## Resources
+
+Mirrors of the esp8266-nodemcu-sds011 repository are maintained at the following locations:
+
+* [Chaosdorf](https://chaosdorf.de/git/derf/esp8266-nodemcu-sds011)
+* [Finalrewind](https://git.finalrewind.org/derf/esp8266-nodemcu-sds011)
+* [GitHub](https://github.com/derf/esp8266-nodemcu-sds011)
